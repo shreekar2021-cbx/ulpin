@@ -521,3 +521,5 @@ def build_overlap_conflict(
         ),
         "checked_at": utc_now_iso() if checked else None,
     }
+
+print(f"EOF")
