@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#071019" />
+  <title>ULPIN | Land & Agriculture Intelligence</title>
+  <link rel="icon" href="data:," />
+
+  <link rel="stylesheet" href="/static/vendor/tailwind.css" />
+  <script src="/static/vendor/three.min.js"></script>
+  <script src="/static/vendor/OrbitControls.js"></script>
+  <script src="/static/vendor/lucide.js"></script>
+  <link rel="stylesheet" href="/static/css/app.css?v=landscape-2" />
+</head>
+<body data-role="{{AUTH_ROLE}}" data-csrf="{{AUTH_CSRF}}">
+  <!-- LOGIN:START -->
+  <main class="auth-shell">
+    <div id="authInit" class="auth-init" role="status" aria-label="Initializing ULPIN spatial intelligence">
+      <div class="auth-init-grid" aria-hidden="true"></div>
+      <div class="auth-init-axis auth-init-axis-x" aria-hidden="true"></div>
+      <div class="auth-init-axis auth-init-axis-y" aria-hidden="true"></div>
+      <div class="auth-warp-field" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="auth-warp-collapse" aria-hidden="true"></div>
+      <div class="auth-init-core">
+        <div class="auth-init-mark"><span></span><i data-lucide="scan-search" width="30" height="30"></i></div>
+        <p class="auth-init-kicker">National land intelligence network</p>
+        <div class="auth-init-word" aria-label="ULPIN"><span>U</span><span>L</span><span>P</span><span>I</span><span>N</span></div>
+        <div class="auth-init-statuses" aria-hidden="true">
+          <span>Spatial engine</span><span>Geospatial index</span><span>Title registry</span><span>Agriculture intelligence</span>
+        </div>
+        <div class="auth-init-progress" aria-hidden="true"><span></span></div>
+        <p class="auth-init-state">Establishing secure spatial context</p>
+      </div>
+    </div>
+    <canvas id="authCanvas" aria-hidden="true"></canvas>
+    <div class="auth-scanlines" aria-hidden="true"></div>
+    <div id="postLoginTransition" class="post-login-transition" hidden aria-hidden="true">
+      <div class="post-login-grid"></div>
+      <div class="post-login-streaks">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="post-login-wave"></div>
+      <div class="post-login-confirm">
+        <strong>ACCESS VERIFIED</strong>
+        <span>SPATIAL ACCESS GRANTED</span>
+      </div>
+    </div>
+    <section class="auth-stage" aria-label="ULPIN secure access">
+      <div class="auth-intelligence" aria-hidden="true">
+        <div class="auth-coordinate auth-coordinate-top">NATIONAL SPATIAL INDEX / ENCRYPTED</div>
+        <div class="auth-signal"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="auth-coordinate auth-coordinate-bottom">GEOREF: 20.5937N / 78.9629E</div>
+      </div>
+      <form id="loginForm" class="auth-form" novalidate>
+        <div class="auth-brand">
+          <div class="auth-emblem"><i data-lucide="scan-search" width="25" height="25"></i></div>
+          <div>
+            <p class="auth-overline">Government spatial intelligence</p>
+            <h1>ULPIN</h1>
+          </div>
+        </div>
+        <div class="auth-intro">
+          <h2>Secure access terminal</h2>
+          <p>Authenticate to the national land intelligence network.</p>
+        </div>
+        <div class="auth-role-selector" role="group" aria-label="Preferred workspace">
+          <button class="auth-role active" type="button" data-role-choice="USER" aria-pressed="true"><i data-lucide="map-pinned" width="15" height="15"></i><span>User</span></button>
+          <button class="auth-role" type="button" data-role-choice="ADMIN" aria-pressed="false"><i data-lucide="shield-check" width="15" height="15"></i><span>Admin</span></button>
+        </div>
+        <input id="loginRole" name="role" type="hidden" value="USER" />
+        <div class="auth-fields">
+          <label for="loginUsername">Operator ID</label>
+          <div class="auth-input-wrap"><i data-lucide="user-round" width="16" height="16"></i><input id="loginUsername" name="username" class="input" autocomplete="username" required maxlength="64" placeholder="Enter your operator ID" /></div>
+          <label for="loginPassword">Access key</label>
+          <div class="auth-input-wrap"><i data-lucide="key-round" width="16" height="16"></i><input id="loginPassword" name="password" class="input" type="password" autocomplete="current-password" required maxlength="128" placeholder="Enter your access key" /><button id="passwordToggle" class="password-toggle" type="button" aria-label="Show access key" aria-pressed="false"><i data-lucide="eye" width="16" height="16"></i></button></div>
+        </div>
+        <p id="loginError" role="alert" aria-live="polite"></p>
+        <button class="btn primary auth-submit" type="submit"><i data-lucide="log-in" width="17" height="17"></i><span>Authenticate</span><i class="auth-submit-arrow" data-lucide="arrow-up-right" width="15" height="15"></i></button>
+        <div class="auth-footer"><span class="auth-lock"><i data-lucide="lock-keyhole" width="13" height="13"></i>Session-protected gateway</span><span>Need access? Contact your administrator.</span></div>
+      </form>
+    </section>
+  </main>
+  <script>
+    lucide.createIcons();
+    const loginForm = document.getElementById('loginForm');
+    const passwordInput = document.getElementById('loginPassword');
+    const passwordToggle = document.getElementById('passwordToggle');
+    const loginError = document.getElementById('loginError');
+    const loginButton = loginForm.querySelector('[type="submit"]');
+    const loginRole = document.getElementById('loginRole');
+    const authInit = document.getElementById('authInit');
+    const postLoginTransition = document.getElementById('postLoginTransition');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const completeInitialization = () => {
+      authInit.classList.add('is-leaving');
+      document.querySelector('.auth-stage').classList.add('is-ready');
+      window.setTimeout(() => { authInit.hidden = true; }, reducedMotion ? 20 : 560);
+    };
+    window.setTimeout(completeInitialization, reducedMotion ? 80 : 4440);
+    const playPostLoginTransition = () => new Promise(resolve => {
+      if (reducedMotion) { resolve(); return; }
+      postLoginTransition.hidden = false;
+      postLoginTransition.classList.remove('is-entering');
+      void postLoginTransition.offsetWidth;
+      document.body.classList.add('post-login-running');
+      postLoginTransition.classList.add('is-entering');
+      window.setTimeout(() => {
+        postLoginTransition.classList.remove('is-entering');
+        postLoginTransition.hidden = true;
+        document.body.classList.remove('post-login-running');
+        resolve();
+      }, 2280);
+    });
+
+    document.querySelectorAll('[data-role-choice]').forEach(option => option.addEventListener('click', () => {
+      document.querySelectorAll('[data-role-choice]').forEach(button => {
+        const active = button === option;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+        if (active) loginRole.value = button.dataset.roleChoice;
+      });
+    }));
+    passwordToggle.addEventListener('click', () => {
+      const visible = passwordInput.type === 'password';
+      passwordInput.type = visible ? 'text' : 'password';
+      passwordToggle.setAttribute('aria-label', visible ? 'Hide access key' : 'Show access key');
+      passwordToggle.setAttribute('aria-pressed', String(visible));
+      passwordToggle.innerHTML = `<i data-lucide="${visible ? 'eye-off' : 'eye'}" width="16" height="16"></i>`;
+      lucide.createIcons();
+    });
+    loginForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!loginForm.reportValidity()) return;
+      loginButton.disabled = true;
+      loginButton.classList.add('is-loading');
+      loginError.textContent = '';
+      try {
+        const selectedRole = document.querySelector('[data-role-choice].active')?.dataset.roleChoice || loginRole.value || 'USER';
+        loginRole.value = selectedRole;
+        const credentials = Object.fromEntries(new FormData(loginForm));
+        credentials.role = selectedRole;
+        const response = await fetch('/api/auth/login', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(credentials)});
+        const data = await response.json();
+        if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Check your username and password.');
+        await playPostLoginTransition();
+        location.replace(data.redirect);
+      } catch (err) { loginError.textContent = err.message; }
+      finally { loginButton.disabled = false; loginButton.classList.remove('is-loading'); }
+    });
+    const authCanvas = document.getElementById('authCanvas');
+    const authShell = document.querySelector('.auth-shell');
+    const authContext = authCanvas.getContext('2d');
+    const spatialNodes = [
+      [.12, .25], [.26, .18], [.41, .3], [.58, .2], [.76, .27], [.88, .18],
+      [.18, .48], [.34, .56], [.52, .46], [.7, .55], [.84, .47],
+      [.24, .76], [.44, .7], [.63, .8], [.8, .72]
+    ];
+    const spatialLinks = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [0, 6], [1, 7], [2, 8], [3, 8], [4, 9], [5, 10], [6, 7], [7, 8], [8, 9], [9, 10], [6, 11], [7, 12], [8, 12], [9, 13], [10, 14], [11, 12], [12, 13], [13, 14]];
+    const spatialModels = [
+      [.13, .67, .88, 'PARCEL_014'], [.87, .66, .82, 'SOIL_GRID'],
+      [.17, .36, .64, 'SURVEY_7'], [.83, .34, .66, 'RISK_NODE']
+    ];
+    const spatialStars = Array.from({length: 54}, (_, index) => [
+      ((index * 83 + 31) % 997) / 997,
+      ((index * 149 + 71) % 787) / 787,
+      index % 11 === 0 ? 2.1 : index % 4 === 0 ? 1.25 : .75,
+      index % 9 === 0
+    ]);
+    let pointerX = .5, pointerY = .45, scannerX = .5, scannerY = .45, drawQueued = false, authFieldActive = true, authDrawFrame = 0, lastCanvasWidth = 0, lastCanvasHeight = 0, scannerSettling = 0, pointerActiveUntil = 0;
+    const drawAuthField = () => {
+      authDrawFrame = 0;
+      drawQueued = false;
+      if (!authFieldActive) return;
+      const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+      const width = authCanvas.clientWidth, height = authCanvas.clientHeight;
+      const nextWidth = Math.max(1, Math.floor(width * ratio));
+      const nextHeight = Math.max(1, Math.floor(height * ratio));
+      if (nextWidth !== lastCanvasWidth || nextHeight !== lastCanvasHeight) {
+        authCanvas.width = nextWidth;
+        authCanvas.height = nextHeight;
+        lastCanvasWidth = nextWidth;
+        lastCanvasHeight = nextHeight;
+      }
+      authContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+      authContext.clearRect(0, 0, width, height);
+      scannerX += (pointerX - scannerX) * .18;
+      scannerY += (pointerY - scannerY) * .18;
+      authShell.style.setProperty('--auth-pointer-x', `${scannerX * 100}%`);
+      authShell.style.setProperty('--auth-pointer-y', `${scannerY * 100}%`);
+      const cx = width * scannerX, cy = height * scannerY;
+      const horizon = height * .62;
+      const spacing = Math.max(16, Math.min(24, width / 58));
+      const microSpacing = spacing / 2;
+      const reach = Math.max(92, Math.min(150, width * .1));
+      const sweep = Math.atan2(pointerY - scannerY, pointerX - scannerX);
+      const networkReach = reach * 1.35;
+      spatialLinks.forEach(([from, to]) => {
+        const a = spatialNodes[from], b = spatialNodes[to];
+        const ax = width * a[0], ay = height * a[1], bx = width * b[0], by = height * b[1];
+        const distance = Math.min(Math.hypot(ax - cx, ay - cy), Math.hypot(bx - cx, by - cy));
+        const glow = Math.max(0, 1 - distance / networkReach);
+        authContext.strokeStyle = `rgba(84, 214, 191, ${.025 + glow * .34})`;
+        authContext.lineWidth = glow > .35 ? 1 : .6;
+        authContext.beginPath(); authContext.moveTo(ax, ay); authContext.lineTo(bx, by); authContext.stroke();
+      });
+      spatialNodes.forEach(([nx, ny], index) => {
+        const x = width * nx, y = height * ny;
+        const distance = Math.hypot(x - cx, y - cy);
+        const glow = Math.max(0, 1 - distance / networkReach);
+        authContext.fillStyle = `rgba(190, 255, 238, ${.045 + glow * .62})`;
+        const size = glow > .25 ? 2.4 : 1.3;
+        authContext.fillRect(x - size / 2, y - size / 2, size, size);
+        if (index % 4 === 0 && glow > .08) {
+          authContext.strokeStyle = `rgba(129, 248, 225, ${glow * .34})`;
+          authContext.strokeRect(x - 3.5, y - 3.5, 7, 7);
+        }
+      });
+      spatialModels.forEach(([nx, ny, scale, label], index) => {
+        const x = width * nx + (scannerX - .5) * (index % 2 ? -10 : 10);
+        const y = height * ny + (scannerY - .5) * (index < 2 ? -8 : 8);
+        const distance = Math.hypot(x - cx, y - cy);
+        const glow = Math.max(0, 1 - distance / (reach * 1.6));
+        const tileW = 58 * scale, tileH = 24 * scale, buildingH = 20 * scale;
+        const alpha = .075 + glow * .45;
+        authContext.strokeStyle = `rgba(126, 239, 219, ${alpha})`;
+        authContext.fillStyle = `rgba(37, 108, 101, ${.035 + glow * .11})`;
+        authContext.lineWidth = glow > .3 ? 1 : .65;
+        authContext.beginPath();
+        authContext.moveTo(x, y - tileH); authContext.lineTo(x + tileW, y); authContext.lineTo(x, y + tileH); authContext.lineTo(x - tileW, y); authContext.closePath();
+        authContext.fill(); authContext.stroke();
+        authContext.beginPath();
+        authContext.moveTo(x - tileW * .52, y - tileH * .04); authContext.lineTo(x + tileW * .08, y - tileH * .62); authContext.lineTo(x + tileW * .55, y - tileH * .14);
+        authContext.moveTo(x - tileW * .16, y + tileH * .5); authContext.lineTo(x + tileW * .44, y - tileH * .08); authContext.stroke();
+        if (index % 2 === 0) {
+          authContext.beginPath();
+          authContext.rect(x - 9 * scale, y - buildingH, 18 * scale, buildingH);
+          authContext.moveTo(x - 9 * scale, y - buildingH); authContext.lineTo(x, y - buildingH - 7 * scale); authContext.lineTo(x + 9 * scale, y - buildingH); authContext.stroke();
+        } else {
+          authContext.beginPath();
+          authContext.arc(x, y - 3 * scale, 7 * scale, 0, Math.PI * 2); authContext.stroke();
+          authContext.beginPath(); authContext.moveTo(x, y - 13 * scale); authContext.lineTo(x, y + 8 * scale); authContext.stroke();
+        }
+        authContext.fillStyle = `rgba(192, 240, 230, ${.12 + glow * .42})`;
+        authContext.font = '600 7px ui-monospace, monospace';
+        authContext.fillText(label, x - tileW, y + tileH + 11);
+      });
+      authContext.lineWidth = .65;
+      const localLeft = Math.max(0, cx - reach * 1.12);
+      const localRight = Math.min(width, cx + reach * 1.12);
+      const localTop = Math.max(horizon - microSpacing, cy - reach);
+      const localBottom = Math.min(height, cy + reach);
+      for (let y = localTop; y < localBottom; y += microSpacing) {
+        const glow = Math.max(0, 1 - Math.abs(y - cy) / reach);
+        authContext.strokeStyle = `rgba(99, 226, 208, ${.02 + glow * .12})`;
+        authContext.beginPath(); authContext.moveTo(localLeft, y); authContext.lineTo(localRight, y); authContext.stroke();
+      }
+      for (let x = localLeft; x < localRight; x += microSpacing) {
+        const glow = Math.max(0, 1 - Math.abs(x - cx) / reach);
+        authContext.strokeStyle = `rgba(99, 226, 208, ${.02 + glow * .12})`;
+        authContext.beginPath(); authContext.moveTo(x, localTop); authContext.lineTo(x, localBottom); authContext.stroke();
+      }
+      for (let y = horizon; y < height + spacing; y += spacing) {
+        const depth = (y - horizon) / Math.max(1, height - horizon);
+        const dy = Math.abs(y - cy);
+        const glow = Math.max(0, 1 - dy / reach);
+        authContext.strokeStyle = `rgba(129, 248, 225, ${.018 + depth * .065 + glow * .19})`;
+        authContext.beginPath();
+        authContext.moveTo(0, y);
+        authContext.lineTo(width, y);
+        authContext.stroke();
+      }
+      for (let x = localLeft - spacing; x < localRight + spacing; x += spacing) {
+        const projected = x + (cx - width / 2) * .035;
+        const dx = Math.abs(projected - cx);
+        const glow = Math.max(0, 1 - dx / reach);
+        authContext.strokeStyle = `rgba(129, 248, 225, ${.025 + glow * .19})`;
+        authContext.beginPath();
+        authContext.moveTo(width / 2 + (x - width / 2) * .1, horizon);
+        authContext.lineTo(projected, height);
+        authContext.stroke();
+      }
+      for (let y = localTop; y < localBottom; y += spacing) {
+        for (let x = localLeft; x < localRight; x += spacing) {
+          const distance = Math.hypot((x - cx) * 1.15, (y - cy) * .8);
+          if (distance > reach * 1.08) continue;
+          const alpha = Math.pow(1 - distance / (reach * 1.08), 2);
+          const sweepCatch = Math.max(0, Math.cos(Math.atan2(y - cy, x - cx) - sweep));
+          authContext.fillStyle = `rgba(220, 255, 248, ${.08 + alpha * (.38 + sweepCatch * .18)})`;
+          authContext.fillRect(x - .75, y - .75, 1.5, 1.5);
+        }
+      }
+      const scanTime = performance.now();
+      spatialStars.forEach(([nx, ny, radius, beacon]) => {
+        const x = nx * width;
+        const y = ny * height * .88 + 26;
+        const distance = Math.hypot(x - cx, y - cy);
+        const glow = Math.max(0, 1 - distance / (reach * 1.8));
+        const hovered = distance < 24;
+        const pulse = hovered ? .65 + Math.sin(scanTime * .028) * .35 : 0;
+        const alpha = .13 + glow * .7 + pulse * .18;
+        authContext.fillStyle = beacon ? `rgba(210, 255, 246, ${alpha})` : `rgba(109, 220, 202, ${alpha * .72})`;
+        authContext.beginPath(); authContext.arc(x, y, radius + glow * .8 + pulse * 1.4, 0, Math.PI * 2); authContext.fill();
+        if ((beacon && glow > .12) || hovered) {
+          const flare = hovered ? 6 + pulse * 10 : 5;
+          authContext.strokeStyle = `rgba(205, 255, 247, ${Math.max(glow * .7, pulse * .9)})`;
+          authContext.lineWidth = .7;
+          authContext.beginPath(); authContext.moveTo(x - flare, y); authContext.lineTo(x + flare, y); authContext.moveTo(x, y - flare); authContext.lineTo(x, y + flare); authContext.stroke();
+        }
+      });
+      scannerSettling = Math.max(Math.abs(pointerX - scannerX), Math.abs(pointerY - scannerY));
+      if (performance.now() < pointerActiveUntil || scannerSettling > .0015) queueAuthDraw();
+    };
+    const queueAuthDraw = () => { if (authFieldActive && !drawQueued) { drawQueued = true; authDrawFrame = requestAnimationFrame(drawAuthField); } };
+    const stopAuthField = () => {
+      authFieldActive = false;
+      drawQueued = false;
+      if (authDrawFrame) cancelAnimationFrame(authDrawFrame);
+      authCanvas.width = authCanvas.height = 1;
+    };
+    window.addEventListener('resize', queueAuthDraw, { passive: true });
+    document.addEventListener('pointermove', event => {
+      pointerX = event.clientX / window.innerWidth; pointerY = event.clientY / window.innerHeight;
+      pointerActiveUntil = performance.now() + 650;
+      queueAuthDraw();
+    }, { passive: true });
+    queueAuthDraw();
+    if (reducedMotion) window.setTimeout(stopAuthField, 140);
+  </script>
+  <!-- LOGIN:END -->
+  <!-- APP:START -->
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+  <div class="app-shell">
+    <header class="header glass" role="banner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><i data-lucide="boxes" width="21" height="21"></i></div>
+        <div class="min-w-0">
+          <h1>ULPIN | Land & Agriculture Intelligence</h1>
+          <p>Smart India Hackathon · SIH26011 · Spatial Title Intelligence Console</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <span class="pill account-badge" title="{{AUTH_USERNAME}} · {{AUTH_ROLE}}">{{AUTH_USERNAME}} · {{AUTH_ROLE}}</span>
+        <button id="logoutBtn" class="btn" aria-label="Sign out" title="Sign out"><i data-lucide="log-out" width="16" height="16"></i></button>
+        <div class="status-badge" aria-label="Spatial Engine Active">
+          <span class="status-dot"></span>
+          <span>Spatial Engine Active</span>
+        </div>
+        <time id="systemClock" class="clock" aria-live="polite">--:--:--</time>
+        <button id="faqBtn" class="header-faq" type="button" aria-label="Open frequently asked questions" aria-pressed="false" data-tooltip="Frequently asked questions">
+          <i data-lucide="circle-help" width="15" height="15"></i><span>FAQ</span>
+        </button>
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle light and dark theme" aria-pressed="false">
+          <span class="theme-knob"><i data-lucide="moon" width="12" height="12"></i></span>
+        </button>
+      </div>
+    </header>
+
+    <main class="workspace" role="main">
+      <section class="left-panel glass" aria-label="Control Console">
+        <nav class="tabs command-nav" aria-label="ULPIN workflow sections">
+          <button class="tab-btn" data-tab="search" aria-selected="false">
+            <i data-lucide="layout-dashboard" width="16" height="16"></i><span>Dashboard</span>
+          </button>
+          <button class="tab-btn" data-tab="registry" aria-selected="false">
+            <i data-lucide="table-2" width="16" height="16"></i><span>Registry</span>
+          </button>
+          <button class="tab-btn" data-tab="floors" aria-selected="false">
+            <i data-lucide="boxes" width="16" height="16"></i><span>3D</span>
+          </button>
+          <!-- ADMIN:START -->
+          <button class="tab-btn" data-tab="admin" aria-selected="false"><i data-lucide="shield-check" width="16" height="16"></i><span>Admin</span></button>
+          <!-- ADMIN:END -->
+          <button class="tab-btn active" data-tab="land" aria-selected="true">
+            <i data-lucide="sprout" width="16" height="16"></i><span>Land Intelligence</span>
+          </button>
+          <button class="tab-btn" data-tab="spatial" aria-selected="false">
+            <i data-lucide="triangle-alert" width="16" height="16"></i><span>Conflicts</span>
+          </button>
+          <button class="tab-btn" data-tab="analytics" aria-selected="false">
+            <i data-lucide="chart-no-axes-combined" width="16" height="16"></i><span>Analytics</span>
+          </button>
+          <button class="tab-btn" data-tab="verify" aria-selected="false">
+            <i data-lucide="file-badge" width="16" height="16"></i><span>Extracts</span>
+          </button>
+          <button class="tab-btn" data-tab="about" aria-selected="false">
+            <i data-lucide="radar" width="16" height="16"></i><span>Impact</span>
+          </button>
+        </nav>
+
+        <div class="tab-content-wrap">
+          <div id="tab-land" class="tab-pane active">
+            <div class="land-heading"><div><h2>Land intelligence</h2><p id="landInventory">Loading areas and packages...</p></div><span class="pill">Synthetic land & risk</span></div>
+            <div class="land-filters">
+              <label>Area<select id="landArea" class="input"><option value="">All areas</option></select></label>
+              <label>Land use<select id="landUse" class="input"><option value="">All land uses</option></select></label>
+              <label>Parcel / crop / survey<input id="landQuery" class="input" type="search" placeholder="Search land" /></label>
+            </div>
+            <div class="land-package-line">
+              <label>Land package<select id="landPackage" class="input"><option value="">Custom selection</option></select></label>
+              <button id="loadPackage" class="btn" title="Replace selection with package"><i data-lucide="folder-open" width="14" height="14"></i>Load</button>
+              <button id="addPackage" class="btn" title="Add package parcels to selection" aria-label="Add package"><i data-lucide="plus" width="14" height="14"></i></button>
+            </div>
+            <div class="land-toolbar">
+              <label><input type="checkbox" id="landMulti" checked /> Multi-select</label>
+              <button id="selectVisible" class="btn">Select filtered</button>
+              <button id="clearLand" class="btn" title="Clear selection" aria-label="Clear land selection"><i data-lucide="x" width="14" height="14"></i></button>
+              <button id="fitLand" class="btn" title="Fit selected parcels" aria-label="Fit selection"><i data-lucide="focus" width="14" height="14"></i></button>
+              <strong id="landCount" aria-live="polite">0 selected</strong>
+            </div>
+            <div id="landBrowser" class="land-browser"></div>
+            <div class="land-save-line">
+              <input id="packageName" class="input" aria-label="Package name" placeholder="Package name" maxlength="80" />
+              <button id="savePackage" class="btn" title="Save new package"><i data-lucide="save" width="14" height="14"></i>Save</button>
+              <button id="updatePackage" class="btn" title="Update saved package" disabled>Update</button>
+              <button id="exportLand" class="btn" aria-label="Export selected intelligence" title="Export selected intelligence"><i data-lucide="download" width="14" height="14"></i></button>
+            </div>
+            <div class="land-toolbar"><label>Weather<select id="weatherProvider" class="input"><option value="demo">Demo weather</option><option value="live">Live / fallback</option></select></label><button id="refreshLand" class="btn" aria-label="Reassess selection" title="Reassess selection"><i data-lucide="refresh-cw" width="14" height="14"></i></button><label>Scene color<select id="landLayer" class="input"><option value="land_use">Land use</option><option value="flood">Flood risk</option><option value="drought">Drought risk</option><option value="heat">Heat risk</option></select></label><span id="landAssessment" class="section-kicker"></span></div>
+            <div id="landError" role="status"></div>
+            <nav id="intelligenceTabs" class="intelligence-tabs" aria-label="Land intelligence views">
+              <button data-intel="overview" class="active">Overview</button><button data-intel="agriculture">Agriculture</button><button data-intel="soil">Soil</button><button data-intel="weather">Weather</button><button data-intel="risks">Risks</button><button data-intel="compare">Compare</button>
+            </nav>
+            <div id="landInsights" aria-live="polite"></div>
+            <div class="land-analysis">
+              <h3>Decision workbench</h3>
+              <label>Question<select id="analysisQuestion" class="input"><option value="best_agriculture">What is the best land package for agriculture?</option><option value="highest_flood">Which parcels have the highest flood risk?</option><option value="favorable_soil_weather">Which farms have suitable soil and favorable weather?</option></select></label>
+              <div class="land-toolbar"><label>Scope<select id="analysisScope" class="input"><option value="selected">Selected parcels</option><option value="all">All indexed land</option></select></label><button id="analyzeLand" class="btn primary"><i data-lucide="list-ordered" width="14" height="14"></i>Assess</button></div>
+              <div id="analysisResult"></div>
+            </div>
+          </div>
+          <div id="tab-search" class="tab-pane">
+            <div class="hero-strip">
+              <div class="eyebrow-line">MISSION DASHBOARD</div>
+              <h2>See the land register as a living spatial system.</h2>
+              <p>Identity, vertical ownership, geometry risk, verification and specimen output connected to the animated 3D cadastre.</p>
+            </div>
+            <div id="dashboardKPIs" class="kpi-row"></div>
+            <div class="section-card">
+              <div class="section-title"><h3>Register Readiness</h3><span id="readinessPct" class="pill">--%</span></div>
+              <div class="progress-track"><span id="readinessBar"></span></div>
+              <div id="readinessText" class="section-kicker mt-2"></div>
+            </div>
+            <div class="section-card">
+              <div class="section-title"><h3>Portfolio Pulse</h3><span class="pill">synthetic trend</span></div>
+              <div id="trendBars" class="trend-bars"></div>
+            </div>
+            <div class="section-card">
+              <div class="section-title"><h3>Needs Attention</h3><button class="btn px-2 py-1" data-jump-tab="spatial" aria-label="Open conflict workbench"><i data-lucide="arrow-right" width="12" height="12"></i></button></div>
+              <div id="attentionList" class="stack-list"></div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title">
+                <div>
+                  <h2>Search & Parcel Filter</h2>
+                  <div class="section-kicker">Registry-linked spatial index</div>
+                </div>
+                <i data-lucide="sliders-horizontal" width="16" height="16"></i>
+              </div>
+
+              <div class="field-grid">
+                <div class="field">
+                  <label for="stateFilter">State</label>
+                  <select id="stateFilter" class="input"><option value="">All States</option></select>
+                </div>
+                <div class="field">
+                  <label for="districtFilter">District</label>
+                  <select id="districtFilter" class="input"><option value="">All Districts</option></select>
+                </div>
+                <div class="field">
+                  <label for="surveyFilter">Survey No.</label>
+                  <input id="surveyFilter" class="input" type="text" autocomplete="off" placeholder="e.g. SY-48/A" />
+                </div>
+                <div class="field">
+                  <label for="ulpinFilter">ULPIN</label>
+                  <input id="ulpinFilter" class="input" type="text" autocomplete="off" placeholder="Machine or display ULPIN" />
+                </div>
+              </div>
+
+              <div class="flex gap-2 mt-3">
+                <button id="searchBtn" class="btn primary flex-1"><i data-lucide="search" width="14" height="14"></i>Search Parcels</button>
+                <button id="clearSearchBtn" class="btn" aria-label="Clear parcel filters"><i data-lucide="x" width="14" height="14"></i></button>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title">
+                <h3>Indexed Parcels</h3>
+                <span id="parcelCount" class="pill">0 records</span>
+              </div>
+              <div id="parcelResults">
+                <div class="skeleton h-16 mb-2"></div>
+                <div class="skeleton h-16 mb-2"></div>
+                <div class="skeleton h-16"></div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title"><h3>Selected Parcel</h3><span id="parcelStatus" class="pill">—</span></div>
+              <div id="selectedParcelMetrics" class="metric-grid">
+                <div class="metric"><div class="metric-label">Parcel</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Survey</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Type</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Centroid</div><div class="metric-value">—</div></div>
+              </div>
+            </div>
+
+            <div class="section-card weather-parcel-card">
+              <div class="section-title">
+                <div>
+                  <h3>Parcel Weather & Soil</h3>
+                  <div class="section-kicker">Hover over any parcel in the 3D map or parcel list to see its conditions instantly</div>
+                </div>
+                <span id="parcelWeatherRank" class="pill">Parcel</span>
+              </div>
+              <div class="section-kicker" id="parcelWeatherTitle">Hover a parcel to begin</div>
+              <div id="parcelWeatherDetails" class="metric-grid">
+                <div class="metric"><div class="metric-label">Temperature</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Rainfall</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Wind</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Soil</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Site Score</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Recommendation</div><div class="metric-value">—</div></div>
+              </div>
+              <div id="parcelWeatherNote" class="section-kicker mt-3">Weather is matched to each parcel centroid. Soil is a regional screening layer.</div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title">
+                <div>
+                  <h3>Site Selection: Weather + Soil</h3>
+                  <div class="section-kicker">Location weather, synthetic soil and record confidence</div>
+                </div>
+                <span id="siteSelectionRank" class="pill">Select a parcel</span>
+              </div>
+              <div id="siteSelectionSummary" class="metric-grid">
+                <div class="metric"><div class="metric-label">Weather</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Soil</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Site Score</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Recommendation</div><div class="metric-value">—</div></div>
+              </div>
+              <div id="siteSelectionNote" class="section-kicker mt-3">Weather is fetched from the parcel centroid. Soil is a regional screening layer and should not replace a field soil test.</div>
+            </div>
+          </div>
+
+          <div id="tab-registry" class="tab-pane">
+            <div class="section-card">
+              <div class="section-title">
+                <div>
+                  <h2>Parcel Registry</h2>
+                  <div class="section-kicker">Filtered records, export payloads and synthetic map context</div>
+                </div>
+                <span id="registryCount" class="pill">0 records</span>
+              </div>
+              <div class="flex gap-2 mb-3">
+                <button id="exportCsvBtn" class="btn flex-1"><i data-lucide="download" width="13" height="13"></i>CSV</button>
+                <button id="exportJsonBtn" class="btn flex-1"><i data-lucide="braces" width="13" height="13"></i>JSON</button>
+                <button class="btn flex-1" data-jump-tab="floors"><i data-lucide="boxes" width="13" height="13"></i>3D</button>
+              </div>
+              <div id="registryRows" class="registry-table"></div>
+            </div>
+            <div class="section-card">
+              <div class="section-title"><h3>Geographic Context</h3><span class="pill">WGS84 demo</span></div>
+              <div id="mapPins" class="mini-map"></div>
+            </div>
+            <div class="section-card">
+              <div class="section-title"><h3>Selected Record</h3><span id="registrySelectedStatus" class="pill">--</span></div>
+              <div id="registryInspector" class="metric-grid"></div>
+            </div>
+          </div>
+
+          <div id="tab-floors" class="tab-pane">
+            <div class="section-card infrastructure-console">
+              <div class="section-title"><div><h2>Underground Network</h2><div class="section-kicker">Inspect connected utilities below ground</div></div><i data-lucide="route" width="17" height="17"></i></div>
+              <div class="layer-row"><span>Pipelines</span><button id="pipelineLayerToggle" class="mini-switch on" data-layer="pipelines" aria-label="Toggle pipelines" aria-pressed="true"></button></div>
+              <button id="addPipelineBtn" class="btn primary w-full"><i data-lucide="plus" width="13" height="13"></i>Add connected pipeline segment</button>
+              <div class="layer-row"><span>Underground infrastructure</span><button id="undergroundLayerToggle" class="mini-switch on" data-layer="underground" aria-label="Toggle underground infrastructure" aria-pressed="true"></button></div>
+              <label class="layer-row"><span>Ground cutaway <input id="groundCutaway" type="checkbox" /></span></label>
+              <div class="infra-category-grid">
+                <label><input type="checkbox" class="infra-category" data-category="water" checked /> Water</label><label><input type="checkbox" class="infra-category" data-category="sewer" checked /> Sewer</label>
+                <label><input type="checkbox" class="infra-category" data-category="gas" checked /> Gas</label><label><input type="checkbox" class="infra-category" data-category="electrical" checked /> Electrical</label>
+                <label><input type="checkbox" class="infra-category" data-category="telecom" checked /> Telecom</label><label><input type="checkbox" class="infra-category" data-category="drainage" checked /> Drainage</label>
+                <label><input type="checkbox" class="infra-category" data-category="chamber" checked /> Chambers</label><label><input type="checkbox" class="infra-category" data-category="tunnel" checked /> Tunnels</label>
+              </div>
+              <div id="undergroundInspector" class="metric-grid"><div class="section-kicker">Click a network asset in the 3D scene</div></div>
+            </div>
+            <div class="section-card qr-card">
+              <div class="section-title"><div><h3>Property QR Code</h3><div class="section-kicker">Public-safe digital property reference</div></div><i data-lucide="qr-code" width="17" height="17"></i></div>
+              <canvas id="propertyQr" width="156" height="156" aria-label="Property QR code"></canvas><div id="propertyQrLabel" class="section-kicker"></div>
+              <div class="button-row"><button id="viewQrBtn" class="btn">View QR</button><button id="downloadQrBtn" class="btn"><i data-lucide="download" width="13" height="13"></i>Download</button><button id="printQrBtn" class="btn"><i data-lucide="printer" width="13" height="13"></i>Print</button></div>
+            </div>
+            <div class="section-card">
+              <div class="section-title">
+                <div>
+                  <h2>Vertical Floor Inspector</h2>
+                  <div id="floorInspectorSubtitle" class="section-kicker">Select a parcel or click a 3D floor</div>
+                </div>
+                <i data-lucide="building-2" width="17" height="17"></i>
+              </div>
+              <div id="floorList" class="floor-list"></div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title"><h3>Floor Attributes</h3><span id="floorStatus" class="pill">No floor selected</span></div>
+              <div id="floorMetrics" class="metric-grid">
+                <div class="metric"><div class="metric-label">ULPIN</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Machine ID</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Owner</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Area</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Usage</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Registered</div><div class="metric-value">—</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-spatial" class="tab-pane">
+            <div class="section-card">
+              <div class="section-title">
+                <div>
+                  <h2>Spatial Overlap & Geometry Engine</h2>
+                  <div class="section-kicker">Parcel / vertical-title conflict simulation</div>
+                </div>
+                <span class="pill">EPSG-aware demo</span>
+              </div>
+
+              <button id="overlapBtn" class="btn danger w-full">
+                <i data-lucide="scan-search" width="14" height="14"></i>
+                Execute Overlap Check
+              </button>
+
+              <div id="overlapPreview" class="warning-card preview">
+                <div class="warning-title">Preflight Overlap Signals</div>
+                <div id="overlapPreviewBody" class="warning-body">Loading spatial risk layer...</div>
+              </div>
+
+              <div id="overlapWarning" class="warning-card" role="alert">
+                <div class="warning-title">Boundary Conflict Detected</div>
+                <div id="overlapWarningBody" class="warning-body"></div>
+              </div>
+            </div>
+
+            <div id="conflictStats" class="kpi-row"></div>
+            <div class="section-card">
+              <div class="section-title"><h3>Case Workflow</h3><span id="workflowStatus" class="pill">waiting</span></div>
+              <div id="conflictWorkflow" class="workflow-steps"></div>
+            </div>
+            <div class="section-card">
+              <div class="section-title"><h3>Compare Registered Records</h3><span class="pill">side by side</span></div>
+              <div id="conflictCompare" class="compare-grid"></div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title"><h3>Geometry Engine Console</h3><span class="pill">live</span></div>
+              <div id="geometryConsole" class="console" aria-live="polite"></div>
+            </div>
+
+            <div class="section-card">
+              <div class="metric-grid">
+                <div class="metric">
+                  <div class="metric-label">Model CRS</div>
+                  <div class="metric-value">WGS84 + Local ENU</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-label">Vertical Model</div>
+                  <div class="metric-value">LOD1 extrusion</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-analytics" class="tab-pane">
+            <div class="section-card">
+              <div class="section-title">
+                <div>
+                  <h2>Portfolio Analytics</h2>
+                  <div class="section-kicker">Verification, land use, built form and boundary exposure</div>
+                </div>
+                <i data-lucide="activity" width="16" height="16"></i>
+              </div>
+              <div id="analyticsCards" class="kpi-row"></div>
+            </div>
+            <div id="analyticsCharts" class="analytics-grid"></div>
+          </div>
+
+          <div id="tab-about" class="tab-pane">
+            <div class="section-card">
+              <div class="section-title">
+                <div>
+                  <h2>Impact & Audit</h2>
+                  <div class="section-kicker">Product story, architecture and transparent session history</div>
+                </div>
+                <i data-lucide="network" width="16" height="16"></i>
+              </div>
+              <div class="story-block"><strong>The Problem</strong><span>Flat land records make identity, geometry, vertical ownership and boundary disputes feel disconnected.</span></div>
+              <div class="story-block"><strong>The Product Idea</strong><span>Make cadastral information operational, visual and explainable through a single spatial workflow.</span></div>
+            </div>
+            <div class="section-card">
+              <div class="section-title"><h3>Core Capabilities</h3><span class="pill">demo-ready</span></div>
+              <div class="capability-grid">
+                <div><i data-lucide="boxes" width="14" height="14"></i><strong>Spatial intelligence</strong><span>Animated vertical massing, layer toggles, floor isolation and conflict volumes.</span></div>
+                <div><i data-lucide="triangle-alert" width="14" height="14"></i><strong>Resolution workflow</strong><span>Boundary checks, officer actions, audit logs and status updates.</span></div>
+                <div><i data-lucide="file-badge" width="14" height="14"></i><strong>Trusted output</strong><span>Watermarked property card with deterministic parcel and floor identifiers.</span></div>
+              </div>
+            </div>
+            <div class="section-card">
+              <div class="section-title"><h3>Architecture</h3><span class="pill">single file</span></div>
+              <pre class="arch-code">FastAPI endpoints -> synthetic parcel register -> Three.js spatial explorer -> officer workflow -> specimen property pass</pre>
+            </div>
+          </div>
+
+          <!-- ADMIN:START -->
+          <div id="tab-admin" class="tab-pane">
+            <div class="section-title"><h2>Administration</h2><button id="adminRefresh" class="btn" title="Refresh administration" aria-label="Refresh administration"><i data-lucide="refresh-cw" width="16" height="16"></i></button></div>
+            <div id="adminStats" class="metric-grid"></div>
+            <button class="btn" data-jump-tab="verify"><i data-lucide="badge-check" width="16" height="16"></i>Verification console</button>
+            <h3>Accounts</h3><div id="adminUsers"></div>
+            <form id="accountForm" class="auth-form">
+              <h3>Create account</h3>
+              <label for="accountUsername">Username</label><input id="accountUsername" name="username" class="input" required minlength="3" maxlength="64" pattern="[A-Za-z0-9_.@-]+" autocomplete="off" />
+              <label for="accountPassword">Password</label><input id="accountPassword" name="password" class="input" type="password" required minlength="12" maxlength="128" autocomplete="new-password" />
+              <label for="accountRole">Role</label><select id="accountRole" name="role" class="input"><option>USER</option><option>ADMIN</option></select>
+              <button class="btn primary" type="submit"><i data-lucide="user-plus" width="16" height="16"></i>Create account</button>
+              <p id="accountStatus" role="status"></p>
+            </form>
+          </div>
+          <!-- ADMIN:END -->
+          <div id="tab-verify" class="tab-pane">
+            <div class="section-card">
+              <div class="section-title">
+                <div>
+                  <h2>Parcel Extracts</h2>
+                  <div class="section-kicker">Specimen document preview plus backend property-card issue flow</div>
+                </div>
+                <i data-lucide="file-badge" width="17" height="17"></i>
+              </div>
+              <div id="certificateCheck" class="check-grid"></div>
+            </div>
+            <div id="certificatePreview" class="doc-preview-mini mb-3"></div>
+
+            <!-- ADMIN:START -->
+            <div class="section-card">
+              <div class="section-title">
+                <div>
+                  <h2>Officer Verification Console</h2>
+                  <div class="section-kicker">Workflow actions are logged by the backend</div>
+                </div>
+                <i data-lucide="shield-check" width="17" height="17"></i>
+              </div>
+
+              <div class="field mb-3">
+                <label for="officerNote">Officer Note</label>
+                <input id="officerNote" class="input" type="text" maxlength="240" placeholder="Optional verification note" />
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <button id="flagBtn" class="btn danger">
+                  <i data-lucide="flag" width="14" height="14"></i>
+                  Flag Spatial Boundary Conflict
+                </button>
+                <button id="resurveyBtn" class="btn warning">
+                  <i data-lucide="map-pin-check-inside" width="14" height="14"></i>
+                  Request On-Site Re-Survey
+                </button>
+                <button id="approveBtn" class="btn success">
+                  <i data-lucide="badge-check" width="14" height="14"></i>
+                  Approve & Issue Digital Property Card
+                </button>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title"><h3>Verification Target</h3><span id="verifyStatus" class="pill">Waiting</span></div>
+              <div id="verifyTarget" class="metric-grid">
+                <div class="metric"><div class="metric-label">Parcel</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Floor</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">ULPIN</div><div class="metric-value">—</div></div>
+                <div class="metric"><div class="metric-label">Owner</div><div class="metric-value">—</div></div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title"><h3>Recent Audit Events</h3><button id="refreshAuditBtn" class="btn px-2 py-1"><i data-lucide="refresh-cw" width="12" height="12"></i></button></div>
+              <div id="auditList" class="text-[10px] text-[var(--muted)] space-y-2">No events yet.</div>
+            </div>
+            <!-- ADMIN:END -->
+          </div>
+
+          <div id="tab-faq" class="tab-pane">
+            <div class="section-card faq-intro">
+              <div class="section-title">
+                <div>
+                  <h2>Frequently Asked Questions</h2>
+                  <div class="section-kicker">Vertical property records and spatial verification</div>
+                </div>
+                <i data-lucide="circle-help" width="17" height="17"></i>
+              </div>
+              <p>Clear answers for citizens, survey teams, and officers using the property mapping workflow.</p>
+            </div>
+
+            <div class="faq-list">
+              <details class="faq-item" open>
+                <summary>What problem does this system solve?</summary>
+                <p>It makes ownership and boundaries easier to understand in multi-storey properties, where a single flat land record cannot clearly show separate floors, units, and shared spaces.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What is a Vertical ULPIN?</summary>
+                <p>It is a unique property identity for a specific vertical unit, such as a floor, apartment, office, or defined shared area within a building.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What does ULPIN stand for?</summary>
+                <p>ULPIN stands for Unique Land Parcel Identification Number. In this workflow, the idea is extended so that a distinct vertical unit can also be precisely located within the parcel and building.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What is a vertical property?</summary>
+                <p>It is a property where rights are connected to space above the land, such as an apartment, a floor in an office tower, a basement parking level, a terrace right, or a shared corridor.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What is the difference between a parcel, a building, a floor, and a unit?</summary>
+                <p>A parcel is the defined piece of land. A building sits on that parcel. A floor is one level of the building. A unit is a specific usable or owned space within a floor, such as a flat, office, shop, or storage area.</p>
+              </details>
+              <details class="faq-item">
+                <summary>Why is a plot number alone not enough for a tall building?</summary>
+                <p>A plot number identifies the land, but it does not distinguish who owns or uses each level above it. Vertical mapping connects each registered unit to its exact place in the building.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What are common areas in a vertical property?</summary>
+                <p>Common areas are spaces used jointly by eligible occupants, such as lobbies, staircases, lifts, corridors, utility rooms, parking access, gardens, and shared terraces. Their rights need to be recorded separately from exclusive units.</p>
+              </details>
+              <details class="faq-item">
+                <summary>Can one building have more than one owner?</summary>
+                <p>Yes. Different people or organisations may hold rights over separate apartments, offices, floors, parking spaces, or commercial units, while the land and common areas may have shared or separately defined interests.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What information is connected to a mapped unit?</summary>
+                <p>A record can connect the unit identity with its parcel, floor, usage, area, spatial position, registration details, verification status, and the documents used during review.</p>
+              </details>
+              <details class="faq-item">
+                <summary>Does a Vertical ULPIN itself prove legal ownership?</summary>
+                <p>No. It is a precise spatial identity that supports verification and record keeping. Legal ownership is determined through the applicable registration, title, and approval process.</p>
+              </details>
+              <details class="faq-item">
+                <summary>Can a unit change hands without changing its spatial identity?</summary>
+                <p>Usually, the physical unit can keep the same spatial identity when ownership changes. The ownership and registration details are updated, while the mapped location remains the reference for that unit.</p>
+              </details>
+              <details class="faq-item">
+                <summary>Why is a 3D view useful when documents already exist?</summary>
+                <p>Documents are essential, but they can be difficult to compare across floors. A 3D view shows the relationship between land, building levels, units, common spaces, and nearby boundaries in one place.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What is spatial verification?</summary>
+                <p>Spatial verification compares the recorded description of a property with its mapped position, size, level, and boundaries. It helps identify information that may need review before a record is accepted.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What is the difference between a warning and a confirmed conflict?</summary>
+                <p>A warning is an early signal that measurements or boundaries may need checking. A confirmed conflict is recorded only after the authorised review process examines the available survey and registration evidence.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What does an overlap warning mean?</summary>
+                <p>It means two mapped boundaries or vertical units may occupy some of the same space. The warning asks for review before a record is finalised.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What kinds of overlap can occur?</summary>
+                <p>Examples include two parcel boundaries crossing, a building extending beyond its recorded parcel, two units claiming the same floor area, or a shared space being incorrectly recorded as exclusive ownership.</p>
+              </details>
+              <details class="faq-item">
+                <summary>Does an overlap warning mean someone has done something wrong?</summary>
+                <p>No. It can result from older surveys, incomplete records, construction changes, data-entry differences, or an actual dispute. The warning is a reason to verify the facts, not a final judgement.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What evidence can be used to review an overlap?</summary>
+                <p>Review may use approved plans, survey measurements, registration documents, title records, site photographs, local authority permissions, and a fresh field survey where required.</p>
+              </details>
+              <details class="faq-item">
+                <summary>Who resolves an overlap or boundary conflict?</summary>
+                <p>An authorised land-record or registration officer reviews the evidence and may request a field re-survey, supporting documents, or corrections from the concerned parties.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What is an on-site re-survey?</summary>
+                <p>It is a fresh measurement of the property at the physical location. It can confirm boundaries, building placement, floor dimensions, and the relationship between the map and the built structure.</p>
+              </details>
+              <details class="faq-item">
+                <summary>Can a record be corrected after it has been created?</summary>
+                <p>Yes, subject to the applicable authority and procedure. A correction should preserve an audit trail showing what changed, why it changed, and the evidence used to support the update.</p>
+              </details>
+              <details class="faq-item">
+                <summary>Why is an audit trail important?</summary>
+                <p>It records important actions such as checks, corrections, officer decisions, and issued extracts. This makes the review process easier to trace and explain later.</p>
+              </details>
+              <details class="faq-item">
+                <summary>Can this system prevent every property dispute?</summary>
+                <p>No system can eliminate every dispute. Its value is in making property information clearer, exposing inconsistencies sooner, and giving reviewers a better basis for evidence-led decisions.</p>
+              </details>
+              <details class="faq-item">
+                <summary>How does this help citizens?</summary>
+                <p>It gives people a clearer view of the unit being recorded, reduces ambiguity around floor-level ownership, and helps surface disputes earlier in the process.</p>
+              </details>
+              <details class="faq-item">
+                <summary>How does this help government officers?</summary>
+                <p>It brings parcel, building, floor, verification, and risk information into one review flow, making it easier to compare records, document decisions, and request the right follow-up evidence.</p>
+              </details>
+              <details class="faq-item">
+                <summary>What happens after a re-survey?</summary>
+                <p>The corrected measurements are reviewed, the spatial record is updated where appropriate, and the verification workflow can continue with a clearer boundary reference.</p>
+              </details>
+            </div>
+
+            <button class="btn w-full justify-center" data-jump-tab="search"><i data-lucide="layout-dashboard" width="14" height="14"></i>Return to Dashboard</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="panelSplitter" class="panel-splitter" role="separator" aria-orientation="vertical"
+           aria-label="Resize control console and 3D explorer" aria-valuemin="28" aria-valuemax="72"
+           aria-valuenow="66" tabindex="0">
+        <button id="splitToggle" class="split-toggle" type="button" aria-label="Collapse parcel panel" title="Collapse parcel panel">
+          <i data-lucide="panel-left-close" width="14" height="14"></i>
+        </button>
+        <span class="split-hint">Drag to resize</span>
+      </div>
+
+      <section class="right-panel glass" aria-label="3D Spatial Explorer">
+        <div id="viewport" aria-label="Interactive 3D property map"></div>
+        <div class="scene-heading">
+          <p>ULPIN / LOCAL SPATIAL REGISTER</p>
+          <h2>Spatial Observatory</h2>
+          <div id="sceneSummary" class="scene-summary"></div>
+        </div>
+
+        <div class="viewport-overlay view-controls">
+          <button id="view3D" class="view-btn active" aria-pressed="true"><i data-lucide="box" width="13" height="13"></i>3D</button>
+          <button id="view2D" class="view-btn" aria-pressed="false"><i data-lucide="map" width="13" height="13"></i>Plan</button>
+          <button id="resetView" class="view-btn icon-btn" aria-label="Fit all parcels" data-tooltip="Fit all parcels"><i data-lucide="maximize" width="14" height="14"></i></button>
+          <button id="explodeView" class="view-btn icon-btn" aria-label="Explode selected parcel" aria-pressed="false" data-tooltip="Explode selected parcel"><i data-lucide="layers-3" width="14" height="14"></i></button>
+          <button id="expandSpatialView" class="view-btn" type="button" aria-label="Expand 3D workspace" aria-pressed="false" data-tooltip="Expand / restore 3D workspace"><i data-lucide="panel-left-close" width="13" height="13"></i><span>Expand</span></button>
+        </div>
+
+        <div id="selectionChip" class="viewport-overlay selection-chip glass">
+          Loading parcel register
+        </div>
+
+        <details id="sceneLayers" class="viewport-overlay layer-controls glass" open>
+          <summary aria-label="Scene layers" title="Scene layers"><i data-lucide="layers-2" width="14" height="14"></i><span>Layers</span></summary>
+          <div class="layer-options">
+          <div class="layer-row"><span>Terrain / Roads</span><button class="mini-switch on" data-layer="terrain" aria-label="Toggle terrain"></button></div>
+          <div class="layer-row"><span>Parcel Bounds</span><button class="mini-switch on" data-layer="parcels" aria-label="Toggle parcel bounds"></button></div>
+          <div class="layer-row"><span>Buildings</span><button class="mini-switch on" data-layer="buildings" aria-label="Toggle buildings"></button></div>
+          <div class="layer-row"><span>Conflict</span><button class="mini-switch on" data-layer="conflict" aria-label="Toggle conflict volume"></button></div>
+          <div class="layer-row"><span>Pipeline network</span><button class="mini-switch on" data-layer="pipelines" aria-label="Toggle pipeline network"></button></div>
+          <div class="layer-row"><span>Underground assets</span><button class="mini-switch on" data-layer="underground" aria-label="Toggle underground assets"></button></div>
+          </div>
+        </details>
+
+        <div id="fpsCounter" class="viewport-overlay fps glass">FPS --</div>
+        <div id="floorContextMenu" class="floor-context-menu glass" role="menu" aria-hidden="true">
+          <button id="viewBlueprintAction" type="button" role="menuitem"><i data-lucide="drafting-compass" width="14" height="14"></i>View Blueprint</button>
+        </div>
+        <div id="blueprintTransition" class="blueprint-transition" aria-hidden="true">
+          <div class="blueprint-transition-cube"></div>
+          <div>
+            <strong id="blueprintTransitionTitle">Generating blueprint</strong>
+            <span id="blueprintTransitionMeta">Loading spatial data</span>
+          </div>
+        </div>
+        <div id="blueprintView" class="blueprint-view" aria-hidden="true">
+          <div class="blueprint-topbar">
+            <div>
+              <p id="blueprintCrumb">HYDERABAD URBAN / BUILDING / FLOOR / BLUEPRINT</p>
+              <h3 id="blueprintTitle">Blueprint Layout</h3>
+            </div>
+            <button id="blueprintClose" class="view-btn icon-btn" type="button" aria-label="Close blueprint" data-tooltip="Close"><i data-lucide="x" width="14" height="14"></i></button>
+          </div>
+          <canvas id="blueprintCanvas" aria-label="Interactive floor blueprint"></canvas>
+          <div id="blueprintHover" class="blueprint-hover" aria-hidden="true"></div>
+          <aside class="blueprint-info glass">
+            <div class="blueprint-info-head">
+              <span id="blueprintFloorLabel">Floor</span>
+              <strong id="blueprintUsageLabel">Usage</strong>
+            </div>
+            <div id="blueprintFacts" class="blueprint-facts"></div>
+            <div id="blueprintRoomPanel" class="blueprint-room-panel">Select a room</div>
+            <div class="blueprint-actions">
+              <button id="blueprintMeasure" class="view-btn" type="button"><i data-lucide="ruler" width="13" height="13"></i>Measure</button>
+              <button id="blueprintNote" class="view-btn" type="button"><i data-lucide="message-square-plus" width="13" height="13"></i>Add Note</button>
+              <button id="blueprintExport" class="view-btn" type="button"><i data-lucide="download" width="13" height="13"></i>Export Blueprint</button>
+              <button id="blueprintReset" class="view-btn" type="button"><i data-lucide="rotate-ccw" width="13" height="13"></i>Reset View</button>
+            </div>
+          </aside>
+        </div>
+        <div class="motion-dock" role="group" aria-label="Scene animation controls">
+          <button id="motionToggle" class="view-btn icon-btn active" aria-label="Pause animations" aria-pressed="true" data-tooltip="Pause animations"><i data-lucide="pause" width="14" height="14"></i></button>
+          <span id="motionState" class="motion-state">LIVE</span>
+          <button id="orbitToggle" class="view-btn icon-btn active" aria-label="Orbit camera" aria-pressed="true" data-tooltip="Orbit camera"><i data-lucide="orbit" width="15" height="15"></i></button>
+          <button id="scanToggle" class="view-btn icon-btn active" aria-label="Survey scan" aria-pressed="true" data-tooltip="Survey scan"><i data-lucide="scan-line" width="15" height="15"></i></button>
+          <button id="replayScene" class="view-btn icon-btn" aria-label="Replay assembly" data-tooltip="Replay assembly"><i data-lucide="rotate-ccw" width="14" height="14"></i></button>
+          <label class="motion-speed"><span class="sr-only">Animation speed</span><input id="motionSpeed" type="range" min="0.25" max="2" step="0.25" value="1" aria-label="Animation speed"><output id="motionSpeedValue" for="motionSpeed">1.00x</output></label>
+        </div>
+
+        <details id="spatialLegend" class="viewport-overlay legend glass" open>
+          <summary>Land use <span id="legendTotal"></span></summary>
+          <div id="legendClasses" role="group" aria-label="Highlight parcels by land use"></div>
+          <div class="legend-status">
+            <div class="legend-row"><span class="swatch red"></span>Boundary conflict <b id="legendConflicts">0</b></div>
+            <div class="legend-row"><span class="swatch" style="background:#ffe077"></span>Selected parcels <b id="legendSelected">0</b></div>
+            <div class="legend-row"><span class="swatch cyan"></span>Active floor</div>
+          </div>
+        </details>
+      </section>
+    </main>
+  </div>
+
+  <!-- ADMIN:START -->
+  <div id="propertyModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="propertyModalTitle">
+    <div class="modal glass">
+      <div class="flex items-center justify-between mb-3 modal-actions">
+        <div>
+          <div class="text-xs text-[var(--muted)]">Official Digital Property Card</div>
+          <h2 id="propertyModalTitle" class="m-0 text-lg font-extrabold">Digital Vertical Property Pass</h2>
+        </div>
+        <button id="closeModalBtn" class="btn modal-close" aria-label="Close property card"><i data-lucide="x" width="15" height="15"></i></button>
+      </div>
+
+      <div class="pass-card">
+        <div class="flex items-center justify-between gap-3 flex-wrap mb-5">
+          <div>
+            <div class="text-[10px] tracking-[0.22em] text-[var(--muted)] font-bold">GOVERNMENT SPATIAL TITLE RECORD</div>
+            <div class="text-xl font-extrabold mt-1">Digital Vertical Property Pass</div>
+          </div>
+          <div class="stamp"><i data-lucide="badge-check" width="15" height="15"></i>OFFICIALLY VERIFIED</div>
+        </div>
+
+        <div class="pass-grid">
+          <div>
+            <div id="cardMetrics" class="metric-grid"></div>
+            <div class="section-card mt-3 mb-0">
+              <div class="section-title"><h3>Vertical Floor Breakdown</h3><span id="cardIssuedAt" class="pill">—</span></div>
+              <div id="cardFloorBreakdown" class="space-y-2"></div>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-center justify-start gap-2">
+            <canvas id="qrCanvas" width="132" height="132" aria-label="Property pass QR visual"></canvas>
+            <div class="text-[9px] text-center text-[var(--muted)]">Scan-ready visual token<br/>for registry lookup</div>
+            <div id="cardId" class="pill text-center"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions flex justify-end gap-2 mt-4">
+        <button id="printCardBtn" class="btn primary"><i data-lucide="printer" width="14" height="14"></i>Print / Download PDF Card</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN:END -->
+  <div id="toastWrap" class="toast-wrap" aria-live="polite"></div>
+
+  <script src="/static/js/intelligence.js"></script>
+  <script src="/static/js/scene-visuals.js?v=landscape-2"></script>
+  <script src="/static/js/app.js?v=landscape-2"></script>
+  <!-- APP:END -->
+</body>
+</html>

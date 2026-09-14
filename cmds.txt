@@ -1,0 +1,4 @@
+.\.venv\Scripts\Activate.ps1
+python app.py
+netstat -ano | findstr :8000
+taskkill /PID  /F
